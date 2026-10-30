@@ -56,7 +56,6 @@ def insertion_sort_steps(arr): # O(n^2)
 
     yield arr.copy(), ()
 
-
 def merge_sort_steps(arr):
     arr = arr.copy()
     n = len(arr)
@@ -105,14 +104,39 @@ def merge_sort_steps(arr):
     yield from divide(0, n - 1)
     yield arr.copy(), ()
 
+def quick_sort_steps(arr):
+    arr = arr.copy()
+    n = len(arr)
 
-def quick_sort_steps(arr): # O(n log n)
+    def divide(left, right):
+        pivot = arr[right]
+        i = left
 
-    def swap(leftE, rightE):
-        leftE, rightE = rightE, leftE
+        for j in range(left, right):
+            # Highlight the current element and pivot
+            yield arr.copy(), (j, right)
 
-    def divide(arr, left, right):
-        pass
+            if arr[j] <= pivot:
+                arr[i], arr[j] = arr[j], arr[i]
+
+                # Show the swap
+                yield arr.copy(), (i, j)
+                i += 1
+
+        # Put pivot in its correct position
+        arr[i], arr[right] = arr[right], arr[i]
+        yield arr.copy(), (i, right)
+
+        return i
+
+    def quick_sort(left, right):
+        if left < right:
+            p = yield from divide(left, right)
+
+            yield from quick_sort(left, p - 1)
+            yield from quick_sort(p + 1, right)
+
+    yield from quick_sort(0, n - 1)
 
     yield arr.copy(), ()
 
@@ -139,11 +163,9 @@ def radix_sort_steps(arr): # O(n^2)
 arr = [8, 3, 6, 2, 7, 1, 5, 4]
 
 if __name__ == "__main__":
-    # arr = list(range(1000))
+    arr = list(range(1, 21))
+    random.shuffle(arr)
 
-    # shuffled_arr = arr
-    # random.shuffle(shuffled_arr)
 
-    # print(shuffled_arr)
-
-    quick_sort_steps(arr)
+    print("Original:", arr)
+    print("Sorted:", quick_sort_steps(arr))   
