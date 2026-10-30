@@ -142,7 +142,7 @@ def quick_sort_steps(arr):
 
 def heap_sort_steps(arr): # O(n^2)
 
-    yield arr.copy(), ()
+    return arr
 
 def counting_sort_steps(arr): # O(n^2)
 
