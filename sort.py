@@ -108,6 +108,11 @@ def merge_sort_steps(arr):
 
 def quick_sort_steps(arr): # O(n log n)
 
+    def swap(leftE, rightE):
+        leftE, rightE = rightE, leftE
+
+    def divide(arr, left, right):
+        pass
 
     yield arr.copy(), ()
 
