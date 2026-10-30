@@ -109,7 +109,27 @@ def quick_sort_steps(arr):
     n = len(arr)
 
     def divide(left, right):
+
+        def median_of_three(left, right):
+            mid = (left + right) // 2
+
+            a = arr[left]
+            b = arr[mid]
+            c = arr[right]
+
+            if (a <= b <= c) or (c <= b <= a):
+                pivot_index = mid
+            elif (b <= a <= c) or (c <= a <= b):
+                pivot_index = left
+            else:
+                pivot_index = right
+
+            return pivot_index
+
+        pivot_index = median_of_three(left=left, right=right)
+        arr[pivot_index], arr[right] = arr[right], arr[pivot_index]
         pivot = arr[right]
+
         i = left
 
         for j in range(left, right):
@@ -163,9 +183,9 @@ def radix_sort_steps(arr): # O(n^2)
 arr = [8, 3, 6, 2, 7, 1, 5, 4]
 
 if __name__ == "__main__":
-    arr = list(range(1, 21))
+    arr = list(range(1, 1001))
     random.shuffle(arr)
+    left = 0
+    right = len(arr) - 1
 
-
-    print("Original:", arr)
-    print("Sorted:", quick_sort_steps(arr))   
+    print(arr)
