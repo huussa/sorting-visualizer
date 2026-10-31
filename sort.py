@@ -200,25 +200,32 @@ def heap_sort_steps(arr):  # O(n log n)
 
 def counting_sort_steps(arr):
     if not arr:
-        return []
+        yield arr.copy(), ()
+        return
 
     arr = arr.copy()
-    max_num = max(arr)
+    if any(not isinstance(value, int) or isinstance(value, bool) for value in arr):
+        raise ValueError("Counting sort only supports integer values.")
 
-    counting_list = [0] * (max_num + 1)
+    min_num = min(arr)
+    max_num = max(arr)
+    counting_list = [0] * (max_num - min_num + 1)
     output = [0] * len(arr)
 
-    for i in arr:
-        counting_list[i] += 1
+    for value in arr:
+        counting_list[value - min_num] += 1
 
     for i in range(1, len(counting_list)):
         counting_list[i] += counting_list[i - 1]
 
-    for i in arr:
-        output[counting_list[i] - 1] = i
-        yield arr.copy(), (i,counting_list[i]) 
-        counting_list[i] -= 1
-        
+    for value in reversed(arr):
+        count_index = value - min_num
+        output[counting_list[count_index] - 1] = value
+        counting_list[count_index] -= 1
+
+    for i, value in enumerate(output):
+        arr[i] = value
+        yield arr.copy(), (i,)
 
     yield arr.copy(), ()
 
