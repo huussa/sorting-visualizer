@@ -148,11 +148,11 @@ class SortingVisualizer:
 
         ttk.Scale(
             speed_frame,
-            from_=10,
+            from_=1,
             to=500,
-            variable=self.speed,
+            variable= self.speed,
             orient="horizontal",
-            length=180
+            length=180, 
         ).pack(side="left", padx=5)
 
         ttk.Label(

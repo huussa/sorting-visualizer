@@ -201,7 +201,7 @@ def heap_sort_steps(arr):  # O(n log n)
 
     yield {}, ()
 
-def counting_sort_steps(arr):
+def counting_sort_steps(arr): # O(n + k)
     if not arr:
         yield {}, ()
         return
