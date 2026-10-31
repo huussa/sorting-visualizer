@@ -218,9 +218,4 @@ def radix_sort_steps(arr): # O(n^2)
 arr = [8, 3, 6, 2, 7, 1, 5, 4]
 
 if __name__ == "__main__":
-    arr = list(range(1, 1001))
-    random.shuffle(arr)
-    left = 0
-    right = len(arr) - 1
-
-    print(arr)
+    pass
