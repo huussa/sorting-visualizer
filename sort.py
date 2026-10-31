@@ -160,11 +160,46 @@ def quick_sort_steps(arr):
 
     yield arr.copy(), ()
 
-def heap_sort_steps(arr): # O(n^2)
+def heap_sort_steps(arr):  # O(n log n)
+    arr = arr.copy()
+    n = len(arr)
+
+    def heapify(heap_size, i):
+        largest = i
+        left_child = i * 2 + 1
+        right_child = i * 2 + 2
+
+        yield arr.copy(), (i,) 
+
+        if left_child < heap_size and arr[left_child] > arr[largest]:
+            largest = left_child
+
+        if right_child < heap_size and arr[right_child] > arr[largest]:
+            largest = right_child
+
+        if largest != i:
+            arr[i], arr[largest] = arr[largest], arr[i]
+            yield arr.copy(), (i, largest)
+            yield from heapify(heap_size, largest)
+
+    def heap_sort():
+        # build Max Heap
+        for i in range(n // 2 - 1, -1, -1):
+            yield from heapify(n, i)
+
+        # sort heap
+        for i in range(n - 1, 0, -1):
+            arr[0], arr[i] = arr[i], arr[0]
+            yield arr.copy(), (0, i)
+
+            yield from heapify(i, 0)
+
+    yield from heap_sort()
 
     yield arr.copy(), ()
 
 def counting_sort_steps(arr): # O(n^2)
+
 
     yield arr.copy(), ()
 
