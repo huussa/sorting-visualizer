@@ -198,8 +198,27 @@ def heap_sort_steps(arr):  # O(n log n)
 
     yield arr.copy(), ()
 
-def counting_sort_steps(arr): # O(n^2)
+def counting_sort_steps(arr):
+    if not arr:
+        return []
 
+    arr = arr.copy()
+    max_num = max(arr)
+
+    counting_list = [0] * (max_num + 1)
+    output = [0] * len(arr)
+
+    for i in arr:
+        counting_list[i] += 1
+
+    for i in range(1, len(counting_list)):
+        counting_list[i] += counting_list[i - 1]
+
+    for i in arr:
+        output[counting_list[i] - 1] = i
+        yield arr.copy(), (i,) 
+        counting_list[i] -= 1
+        
 
     yield arr.copy(), ()
 
@@ -215,7 +234,8 @@ def radix_sort_steps(arr): # O(n^2)
 
     yield arr.copy(), ()
 
-arr = [8, 3, 6, 2, 7, 1, 5, 4]
+
 
 if __name__ == "__main__":
-    pass
+    print(arr)
+    print(counting_sort_steps(arr))
