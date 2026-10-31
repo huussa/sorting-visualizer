@@ -174,7 +174,7 @@ def heap_sort_steps(arr):  # O(n log n)
 
             yield from heapify(i, 0)
 
-    heap_sort()
+    yield from heap_sort()
 
     yield arr.copy(), ()
 
