@@ -216,7 +216,7 @@ def counting_sort_steps(arr):
 
     for i in arr:
         output[counting_list[i] - 1] = i
-        yield arr.copy(), (i,) 
+        yield arr.copy(), (i,counting_list[i]) 
         counting_list[i] -= 1
         
 
