@@ -203,4 +203,4 @@ if __name__ == "__main__":
 
 
     print("Original:", arr)
-    print("Sorted:", heap_sort_steps(arr))   
+    print("Sorted:", quick_sort_steps(arr))   
