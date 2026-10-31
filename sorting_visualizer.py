@@ -24,6 +24,8 @@ class SortingVisualizer:
         self.timer_after_id = None
         self.timer_started_at = None
         self.algorithms = {}
+        self.bar_items = []
+        self.active_indices = set()
 
         # =========================
         # Algorithm controls
@@ -343,6 +345,8 @@ class SortingVisualizer:
     # =========================
     def draw(self, event=None, active=()):
         self.canvas.delete("all")
+        self.bar_items = []
+        self.active_indices = set(active)
 
         if not self.arr:
             return
@@ -353,19 +357,20 @@ class SortingVisualizer:
         if width <= 1 or height <= 1:
             return
 
-        maximum = max(abs(x) for x in self.arr)
-        maximum = maximum or 1
+        self.bar_maximum = max(abs(x) for x in self.arr) or 1
 
         count = len(self.arr)
-        bar_width = width / count
+        self.bar_width = width / count
+        self.bar_height = height - 35
+        self.bar_canvas_height = height
 
         for i, value in enumerate(self.arr):
             bar_height = (
-                abs(value) / maximum
-            ) * (height - 35)
+                abs(value) / self.bar_maximum
+            ) * self.bar_height
 
-            x1 = i * bar_width + 1
-            x2 = (i + 1) * bar_width - 1
+            x1 = i * self.bar_width + 1
+            x2 = (i + 1) * self.bar_width - 1
             y1 = height - bar_height
             y2 = height
 
@@ -375,11 +380,42 @@ class SortingVisualizer:
                 else "#55b8f5"
             )
 
-            self.canvas.create_rectangle(
+            item = self.canvas.create_rectangle(
                 x1, y1, x2, y2,
                 fill=color,
                 outline=""
             )
+            self.bar_items.append(item)
+
+    def update_bars(self, changes, active):
+        previous_active = self.active_indices
+
+        for index, value in changes.items():
+            self.arr[index] = value
+
+        if len(self.bar_items) != len(self.arr):
+            self.draw(active=active)
+            return
+
+        for index, value in changes.items():
+            bar_height = (
+                abs(value) / self.bar_maximum
+            ) * self.bar_height
+            x1 = index * self.bar_width + 1
+            x2 = (index + 1) * self.bar_width - 1
+            y1 = self.bar_canvas_height - bar_height
+            self.canvas.coords(
+                self.bar_items[index],
+                x1, y1, x2, self.bar_canvas_height
+            )
+
+        for index in previous_active | set(active):
+            self.canvas.itemconfigure(
+                self.bar_items[index],
+                fill="#ff9f43" if index in active else "#55b8f5"
+            )
+
+        self.active_indices = set(active)
 
     # =========================
     # Start sorting
@@ -476,16 +512,40 @@ class SortingVisualizer:
         self.after_id = None
 
         try:
-            current_arr, active = next(self.steps)
+            changes, active = next(self.steps)
 
-            if len(current_arr) != len(self.arr):
+            if not isinstance(changes, dict):
                 raise ValueError(
-                    "The algorithm changed the array length."
+                    "The algorithm must yield index-to-value changes."
                 )
 
-            self.arr = list(current_arr)
+            if not isinstance(active, tuple):
+                raise ValueError(
+                    "The algorithm must yield active indices as a tuple."
+                )
 
-            self.draw(active=active)
+            changed_indices = set(changes)
+            all_indices = changed_indices | set(active)
+            if any(
+                not isinstance(index, int)
+                or isinstance(index, bool)
+                or not 0 <= index < len(self.arr)
+                for index in all_indices
+            ):
+                raise ValueError(
+                    "The algorithm yielded an invalid array index."
+                )
+
+            if any(
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                for value in changes.values()
+            ):
+                raise ValueError(
+                    "The algorithm yielded a non-numeric array value."
+                )
+
+            self.update_bars(changes, active)
 
             delay = int(self.speed.get())
 

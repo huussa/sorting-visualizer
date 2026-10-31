@@ -8,17 +8,15 @@ def bubble_sort_steps(arr): # O(n^2)
         is_sorted = True
 
         for j in range(n - i - 1):
-            yield arr.copy(), (j, j + 1)
-
             if arr[j] > arr[j + 1]:
                 arr[j], arr[j + 1] = arr[j + 1], arr[j]
                 is_sorted = False
-                yield arr.copy(), (j, j + 1)
+                yield {j: arr[j], j + 1: arr[j + 1]}, (j, j + 1)
 
         if is_sorted:
             break
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def selection_sort_steps(arr): # O(n^2)
     arr = arr.copy()
@@ -27,16 +25,14 @@ def selection_sort_steps(arr): # O(n^2)
     for i in range(n):
         minIndex = i
         for j in range(i + 1, n):
-            yield arr.copy(), (minIndex, j)
-
             if arr[minIndex] > arr[j]:
                 minIndex = j
             
         if minIndex != i:
             arr[i], arr[minIndex] = arr[minIndex], arr[i]
-            yield arr.copy(), (i, minIndex)
+            yield {i: arr[i], minIndex: arr[minIndex]}, (i, minIndex)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def insertion_sort_steps(arr): # O(n^2)
     arr = arr.copy()
@@ -47,14 +43,15 @@ def insertion_sort_steps(arr): # O(n^2)
         j = i - 1
 
         while j >= 0 and arr[j] > key:
-            yield arr.copy(), (j + 1, j)
             arr[j + 1] = arr[j]
+            yield {j + 1: arr[j + 1]}, (j, j + 1)
             j -= 1
 
-        arr[j + 1] = key
-        yield arr.copy(), (j + 1, j + 1)
+        if arr[j + 1] != key:
+            arr[j + 1] = key
+            yield {j + 1: arr[j + 1]}, (j + 1,)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def merge_sort_steps(arr):
     arr = arr.copy()
@@ -70,25 +67,31 @@ def merge_sort_steps(arr):
 
         while i < len(left_arr) and j < len(right_arr):
             if left_arr[i] <= right_arr[j]:
-                arr[k] = left_arr[i]
+                value = left_arr[i]
                 i += 1
             else:
-                arr[k] = right_arr[j]
+                value = right_arr[j]
                 j += 1
 
-            yield arr.copy(), (k,)
+            if arr[k] != value:
+                arr[k] = value
+                yield {k: value}, (k,)
             k += 1
 
         while i < len(left_arr):
-            arr[k] = left_arr[i]
+            value = left_arr[i]
             i += 1
-            yield arr.copy(), (k,)
+            if arr[k] != value:
+                arr[k] = value
+                yield {k: value}, (k,)
             k += 1
 
         while j < len(right_arr):
-            arr[k] = right_arr[j]
+            value = right_arr[j]
             j += 1
-            yield arr.copy(), (k,)
+            if arr[k] != value:
+                arr[k] = value
+                yield {k: value}, (k,)
             k += 1
 
     def divide(left, right):
@@ -102,7 +105,7 @@ def merge_sort_steps(arr):
         yield from merge(left, mid, right)
 
     yield from divide(0, n - 1)
-    yield arr.copy(), ()
+    yield {}, ()
 
 def quick_sort_steps(arr):
     arr = arr.copy()
@@ -127,25 +130,27 @@ def quick_sort_steps(arr):
             return pivot_index
 
         pivot_index = median_of_three(left=left, right=right)
-        arr[pivot_index], arr[right] = arr[right], arr[pivot_index]
+        if pivot_index != right:
+            arr[pivot_index], arr[right] = arr[right], arr[pivot_index]
+            yield {
+                pivot_index: arr[pivot_index],
+                right: arr[right],
+            }, (pivot_index, right)
         pivot = arr[right]
 
         i = left
 
         for j in range(left, right):
-            # Highlight the current element and pivot
-            yield arr.copy(), (j, right)
-
             if arr[j] <= pivot:
-                arr[i], arr[j] = arr[j], arr[i]
-
-                # Show the swap
-                yield arr.copy(), (i, j)
+                if i != j:
+                    arr[i], arr[j] = arr[j], arr[i]
+                    yield {i: arr[i], j: arr[j]}, (i, j)
                 i += 1
 
         # Put pivot in its correct position
-        arr[i], arr[right] = arr[right], arr[i]
-        yield arr.copy(), (i, right)
+        if i != right:
+            arr[i], arr[right] = arr[right], arr[i]
+            yield {i: arr[i], right: arr[right]}, (i, right)
 
         return i
 
@@ -158,7 +163,7 @@ def quick_sort_steps(arr):
 
     yield from quick_sort(0, n - 1)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def heap_sort_steps(arr):  # O(n log n)
     arr = arr.copy()
@@ -169,8 +174,6 @@ def heap_sort_steps(arr):  # O(n log n)
         left_child = i * 2 + 1
         right_child = i * 2 + 2
 
-        yield arr.copy(), (i,) 
-
         if left_child < heap_size and arr[left_child] > arr[largest]:
             largest = left_child
 
@@ -179,7 +182,7 @@ def heap_sort_steps(arr):  # O(n log n)
 
         if largest != i:
             arr[i], arr[largest] = arr[largest], arr[i]
-            yield arr.copy(), (i, largest)
+            yield {i: arr[i], largest: arr[largest]}, (i, largest)
             yield from heapify(heap_size, largest)
 
     def heap_sort():
@@ -190,22 +193,20 @@ def heap_sort_steps(arr):  # O(n log n)
         # sort heap
         for i in range(n - 1, 0, -1):
             arr[0], arr[i] = arr[i], arr[0]
-            yield arr.copy(), (0, i)
+            yield {0: arr[0], i: arr[i]}, (0, i)
 
             yield from heapify(i, 0)
 
     yield from heap_sort()
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def counting_sort_steps(arr):
     if not arr:
-        yield arr.copy(), ()
+        yield {}, ()
         return
 
     arr = arr.copy()
-    if any(not isinstance(value, int) or isinstance(value, bool) for value in arr):
-        raise ValueError("Counting sort only supports integer values.")
 
     min_num = min(arr)
     max_num = max(arr)
@@ -225,21 +226,21 @@ def counting_sort_steps(arr):
 
     for i, value in enumerate(output):
         arr[i] = value
-        yield arr.copy(), (i,)
+        yield {i: value}, (i,)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def shell_sort_steps(arr): # O(n^2)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def tim_sort_steps(arr): # O(n^2)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 def radix_sort_steps(arr): # O(n^2)
 
-    yield arr.copy(), ()
+    yield {}, ()
 
 
 
