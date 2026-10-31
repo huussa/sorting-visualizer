@@ -308,7 +308,7 @@ class SortingVisualizer:
                 raise ValueError
 
             self.arr = [
-                random.randint(1, 100)
+                random.randint(1, 1000)
                 for _ in range(length)
             ]
 
