@@ -165,11 +165,11 @@ def quick_sort_steps(arr):
 
     yield {}, ()
 
-def heap_sort_steps(arr):  # O(n log n)
+def heap_sort_steps(arr: list):  # O(n log n)
     arr = arr.copy()
     n = len(arr)
 
-    def heapify(heap_size, i):
+    def heapify(heap_size: int, i: int):
         largest = i
         left_child = i * 2 + 1
         right_child = i * 2 + 2
@@ -201,7 +201,7 @@ def heap_sort_steps(arr):  # O(n log n)
 
     yield {}, ()
 
-def counting_sort_steps(arr): # O(n + k)
+def counting_sort_steps(arr: list): # O(n + k)
     if not arr:
         yield {}, ()
         return
@@ -230,9 +230,17 @@ def counting_sort_steps(arr): # O(n + k)
 
     yield {}, ()
 
-def shell_sort_steps(arr): # O(n^2)
-
-    yield {}, ()
+def shell_sort_steps(arr: list): # O(n^2)
+    arr = arr.copy()
+    n = len(arr)
+    
+    for i in range(n // 2, 0, n // 2):
+        print(i)
+        # for j in range(n):
+        #     if i + j < n - 1:
+        #         print(arr[j], arr[j + i])
+        #     pass
+    # yield {}, ()
 
 def tim_sort_steps(arr): # O(n^2)
 
@@ -246,3 +254,4 @@ def radix_sort_steps(arr): # O(n^2)
 arr = list(random.randint(1, 100) for i in range(15))
 if __name__ == "__main__":
     print(arr)
+    print(shell_sort_steps(arr=arr))
