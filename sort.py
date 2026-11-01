@@ -1,5 +1,3 @@
-import random
-
 def bubble_sort_steps(arr): # O(n^2)
     arr = arr.copy()
     n = len(arr)
@@ -207,7 +205,6 @@ def counting_sort_steps(arr: list): # O(n + k)
         return
 
     arr = arr.copy()
-
     min_num = min(arr)
     max_num = max(arr)
     counting_list = [0] * (max_num - min_num + 1)
@@ -235,24 +232,23 @@ def shell_sort_steps(arr: list): # O(n^2)
     n = len(arr)
 
     gap = n // 2
-
     while gap > 0:
-
         for i in range(gap, n):
-
-            current = arr[i]
+            value = arr[i]
             j = i
 
-            while j >= gap and arr[j - gap] > current:
+            while j >= gap and arr[j - gap] > value:
                 arr[j] = arr[j - gap]
+                yield {j: arr[j]}, (j - gap, j)
                 j -= gap
 
-            arr[j] = current
+            if j != i:
+                arr[j] = value
+                yield {j: value}, (j, i)
 
         gap //= 2
 
-    return arr
-    # yield {}, ()
+    yield {}, ()
 
 def tim_sort_steps(arr): # O(n^2)
 
@@ -263,6 +259,5 @@ def radix_sort_steps(arr): # O(n^2)
     yield {}, ()
 
 
-arr = list(random.randint(1, 100) for i in range(1000000))
 if __name__ == "__main__":
     print(shell_sort_steps(arr=arr))
