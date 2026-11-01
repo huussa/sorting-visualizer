@@ -243,7 +243,6 @@ def radix_sort_steps(arr): # O(n^2)
     yield {}, ()
 
 
-
+arr = list(random.randint(1, 100) for i in range(15))
 if __name__ == "__main__":
     print(arr)
-    print(counting_sort_steps(arr))
