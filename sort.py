@@ -216,14 +216,17 @@ def counting_sort_steps(arr: list): # O(n + k)
     for i in range(1, len(counting_list)):
         counting_list[i] += counting_list[i - 1]
 
-    for value in reversed(arr):
+    source = arr.copy()
+    for source_index in range(len(source) - 1, -1, -1):
+        value = source[source_index]
         count_index = value - min_num
-        output[counting_list[count_index] - 1] = value
-        counting_list[count_index] -= 1
 
-    for i, value in enumerate(output):
-        arr[i] = value
-        yield {i: value}, (i,)
+        counting_list[count_index] -= 1
+        destination = counting_list[count_index]
+
+        output[destination] = value
+        arr[destination] = value
+        yield {destination: value}, (source_index, destination)
 
     yield {}, ()
 
