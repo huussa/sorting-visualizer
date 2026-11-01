@@ -233,13 +233,25 @@ def counting_sort_steps(arr: list): # O(n + k)
 def shell_sort_steps(arr: list): # O(n^2)
     arr = arr.copy()
     n = len(arr)
-    
-    for i in range(n // 2, 0, n // 2):
-        print(i)
-        # for j in range(n):
-        #     if i + j < n - 1:
-        #         print(arr[j], arr[j + i])
-        #     pass
+
+    gap = n // 2
+
+    while gap > 0:
+
+        for i in range(gap, n):
+
+            current = arr[i]
+            j = i
+
+            while j >= gap and arr[j - gap] > current:
+                arr[j] = arr[j - gap]
+                j -= gap
+
+            arr[j] = current
+
+        gap //= 2
+
+    return arr
     # yield {}, ()
 
 def tim_sort_steps(arr): # O(n^2)
@@ -251,7 +263,6 @@ def radix_sort_steps(arr): # O(n^2)
     yield {}, ()
 
 
-arr = list(random.randint(1, 100) for i in range(15))
+arr = list(random.randint(1, 100) for i in range(1000000))
 if __name__ == "__main__":
-    print(arr)
     print(shell_sort_steps(arr=arr))
