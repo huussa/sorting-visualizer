@@ -1,5 +1,3 @@
-import random
-
 def bubble_sort_steps(arr): # O(n^2)
     arr = arr.copy()
     n = len(arr)
@@ -165,11 +163,11 @@ def quick_sort_steps(arr):
 
     yield {}, ()
 
-def heap_sort_steps(arr):  # O(n log n)
+def heap_sort_steps(arr: list):  # O(n log n)
     arr = arr.copy()
     n = len(arr)
 
-    def heapify(heap_size, i):
+    def heapify(heap_size: int, i: int):
         largest = i
         left_child = i * 2 + 1
         right_child = i * 2 + 2
@@ -201,13 +199,12 @@ def heap_sort_steps(arr):  # O(n log n)
 
     yield {}, ()
 
-def counting_sort_steps(arr): # O(n + k)
+def counting_sort_steps(arr: list): # O(n + k)
     if not arr:
         yield {}, ()
         return
 
     arr = arr.copy()
-
     min_num = min(arr)
     max_num = max(arr)
     counting_list = [0] * (max_num - min_num + 1)
@@ -230,7 +227,26 @@ def counting_sort_steps(arr): # O(n + k)
 
     yield {}, ()
 
-def shell_sort_steps(arr): # O(n^2)
+def shell_sort_steps(arr: list): # O(n^2)
+    arr = arr.copy()
+    n = len(arr)
+
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            value = arr[i]
+            j = i
+
+            while j >= gap and arr[j - gap] > value:
+                arr[j] = arr[j - gap]
+                yield {j: arr[j]}, (j - gap, j)
+                j -= gap
+
+            if j != i:
+                arr[j] = value
+                yield {j: value}, (j, i)
+
+        gap //= 2
 
     yield {}, ()
 
@@ -243,7 +259,5 @@ def radix_sort_steps(arr): # O(n^2)
     yield {}, ()
 
 
-
 if __name__ == "__main__":
-    print(arr)
-    print(counting_sort_steps(arr))
+    print(shell_sort_steps(arr=arr))
