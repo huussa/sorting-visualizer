@@ -34,13 +34,17 @@ class SortingVisualizer:
         controls.pack(fill="x")
 
         ttk.Label(
-            controls, text="Algorithm:"
+            controls, 
+            text="Algorithm:", 
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
         self.algorithm = ttk.Combobox(
             controls,
             state="readonly",
-            width=18
+            width=18, 
+            justify="center",
+            font=("TkDefaultFont", 10, "bold"),
         )
         self.algorithm.pack(side="left", padx=5)
 
@@ -80,18 +84,20 @@ class SortingVisualizer:
         array_frame.pack(fill="x")
 
         ttk.Label(
-            array_frame, text="Array:"
+            array_frame, 
+            text="Array:",
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
-        self.array_input = ttk.Entry(array_frame)
+        self.array_input = ttk.Entry(array_frame, font=("TkDefaultFont", 10, "bold"), )
         self.array_input.pack(
             side="left", fill="x", expand=True, padx=5
         )
 
         self.array_input.insert(
-            0, "[64, 34, 25, 12, 22, 11, 90]"
+            0, f"{[random.randint(1, 1000) for x in range(300)]}"
         )
-
+        
         ttk.Button(
             array_frame,
             text="Load Array",
@@ -108,17 +114,21 @@ class SortingVisualizer:
 
         ttk.Label(
             length_frame,
-            text="Array Length:"
+            text="Array Length:",
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
-        self.array_length = tk.IntVar(value=30)
+        self.array_length = tk.IntVar(value=1000)
 
         ttk.Spinbox(
             length_frame,
             from_=2,
             to=10000,
-            textvariable=self.array_length,
-            width=8
+            text=self.array_length,
+            width=8, 
+            font=("TkDefaultFont", 10, "bold"),
+            justify="center"
+            
         ).pack(side="left", padx=5)
 
         ttk.Button(
@@ -136,14 +146,17 @@ class SortingVisualizer:
         speed_frame.pack(fill="x")
 
         ttk.Label(
-            speed_frame, text="Speed:"
+            speed_frame, 
+            text="Speed:", 
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
         self.speed = tk.IntVar(value=1)
 
         ttk.Label(
             speed_frame,
-            text="Faster"
+            text="Faster",
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
         ttk.Scale(
@@ -158,6 +171,7 @@ class SortingVisualizer:
         ttk.Label(
             speed_frame,
             text="Slower",
+            font=("TkDefaultFont", 10, "bold")
         ).pack(side="left", padx=5)
 
         # =========================
@@ -281,7 +295,8 @@ class SortingVisualizer:
             self.array_length.set(len(self.arr))
 
             self.status.config(
-                text=f"Loaded {len(self.arr)} elements"
+                text=f"Loaded {len(self.arr)} elements",
+                font=("TkDefaultFont", 10, "bold")
             )
 
             self.draw()
@@ -374,6 +389,7 @@ class SortingVisualizer:
             y1 = height - bar_height
             y2 = height
 
+            global color
             color = (
                 "#ff9f43"
                 if i in active
