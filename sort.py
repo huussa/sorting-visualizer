@@ -1,4 +1,4 @@
-def bubble_sort_steps(arr): # O(n^2)
+def bubble_sort_steps(arr: int): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -16,7 +16,7 @@ def bubble_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def selection_sort_steps(arr): # O(n^2)
+def selection_sort_steps(arr: int): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -32,7 +32,7 @@ def selection_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def insertion_sort_steps(arr): # O(n^2)
+def insertion_sort_steps(arr: list): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -51,11 +51,11 @@ def insertion_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def merge_sort_steps(arr):
+def merge_sort_steps(arr: list):
     arr = arr.copy()
     n = len(arr)
 
-    def merge(left, mid, right):
+    def merge(left: int, mid: int, right: int):
         left_arr = arr[left:mid + 1]
         right_arr = arr[mid + 1:right + 1]
 
@@ -92,7 +92,7 @@ def merge_sort_steps(arr):
                 yield {k: value}, (k,)
             k += 1
 
-    def divide(left, right):
+    def divide(left: int, right: int):
         if left >= right:
             return
 
@@ -105,13 +105,13 @@ def merge_sort_steps(arr):
     yield from divide(0, n - 1)
     yield {}, ()
 
-def quick_sort_steps(arr):
+def quick_sort_steps(arr: list):
     arr = arr.copy()
     n = len(arr)
 
-    def divide(left, right):
+    def divide(left: int, right: int):
 
-        def median_of_three(left, right):
+        def median_of_three(left: int, right: int):
             mid = (left + right) // 2
 
             a = arr[left]
@@ -152,7 +152,7 @@ def quick_sort_steps(arr):
 
         return i
 
-    def quick_sort(left, right):
+    def quick_sort(left: int, right: int):
         if left < right:
             p = yield from divide(left, right)
 
@@ -253,11 +253,148 @@ def shell_sort_steps(arr: list): # O(n^2)
 
     yield {}, ()
 
-def tim_sort_steps(arr): # O(n^2)
+def tim_sort_steps(arr: list): # O(n log n)
+    arr = arr.copy()
+    n = len(arr)
+
+    if n < 2:
+        yield {}, ()
+        return
+
+    min_run = n
+    remainder = 0
+    while min_run >= 64:
+        remainder |= min_run & 1
+        min_run >>= 1
+    min_run += remainder
+
+    def reverse_run(start: int, end: int):
+        left = start
+        right = end - 1
+        changes = {}
+        while left < right:
+            arr[left], arr[right] = arr[right], arr[left]
+            changes[left] = arr[left]
+            changes[right] = arr[right]
+            left += 1
+            right -= 1
+        if changes:
+            yield changes, (start, end - 1)
+
+    def binary_insertion_sort(start: int, end: int, sorted_end: int):
+        for index in range(sorted_end, end):
+            value = arr[index]
+            left = start
+            right = index
+
+            while left < right:
+                mid = (left + right) // 2
+                if value < arr[mid]:
+                    right = mid
+                else:
+                    left = mid + 1
+
+            changes = {}
+            for destination in range(index, left, -1):
+                arr[destination] = arr[destination - 1]
+                changes[destination] = arr[destination]
+
+            if left != index:
+                arr[left] = value
+                changes[left] = value
+                yield changes, (left, index)
+
+    def merge_at(runs: list, index: int):
+        start, left_length = runs[index]
+        right_start, right_length = runs[index + 1]
+        left_run = arr[start:right_start]
+        left_index = 0
+        right_index = right_start
+        right_end = right_start + right_length
+        destination = start
+        changes = {}
+
+        while left_index < len(left_run) and right_index < right_end:
+            if left_run[left_index] <= arr[right_index]:
+                value = left_run[left_index]
+                left_index += 1
+            else:
+                value = arr[right_index]
+                right_index += 1
+
+            if arr[destination] != value:
+                arr[destination] = value
+                changes[destination] = value
+            destination += 1
+
+        while left_index < len(left_run):
+            value = left_run[left_index]
+            left_index += 1
+            if arr[destination] != value:
+                arr[destination] = value
+                changes[destination] = value
+            destination += 1
+
+        if changes:
+            yield changes, (start, right_end - 1)
+
+        runs[index:index + 2] = [(start, left_length + right_length)]
+
+    def merge_collapse(runs: list):
+        while len(runs) > 1:
+            run_count = len(runs)
+            if (
+                run_count >= 3
+                and runs[-3][1] <= runs[-2][1] + runs[-1][1]
+            ) or (
+                run_count >= 4
+                and runs[-4][1] <= runs[-3][1] + runs[-2][1]
+            ):
+                if runs[-3][1] < runs[-1][1]:
+                    merge_index = run_count - 3
+                else:
+                    merge_index = run_count - 2
+            elif runs[-2][1] <= runs[-1][1]:
+                merge_index = run_count - 2
+            else:
+                break
+
+            yield from merge_at(runs, merge_index)
+
+    runs = []
+    start = 0
+    while start < n:
+        end = start + 1
+        if end < n:
+            if arr[end] < arr[start]:
+                end += 1
+                while end < n and arr[end] < arr[end - 1]:
+                    end += 1
+                yield from reverse_run(start, end)
+            else:
+                end += 1
+                while end < n and arr[end] >= arr[end - 1]:
+                    end += 1
+
+        run_end = min(n, max(end, start + min_run))
+        if run_end > end:
+            yield from binary_insertion_sort(start, run_end, end)
+
+        runs.append((start, run_end - start))
+        yield from merge_collapse(runs)
+        start = run_end
+
+    while len(runs) > 1:
+        run_count = len(runs)
+        if run_count >= 3 and runs[-3][1] < runs[-1][1]:
+            merge_index = run_count - 3
+        else:
+            merge_index = run_count - 2
+        yield from merge_at(runs, merge_index)
 
     yield {}, ()
 
-def radix_sort_steps(arr): # O(n^2)
+def radix_sort_steps(arr: list): # O(n^2)
 
     yield {}, ()
 
