@@ -1,4 +1,4 @@
-def bubble_sort_steps(arr): # O(n^2)
+def bubble_sort_steps(arr: int): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -16,7 +16,7 @@ def bubble_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def selection_sort_steps(arr): # O(n^2)
+def selection_sort_steps(arr: int): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -32,7 +32,7 @@ def selection_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def insertion_sort_steps(arr): # O(n^2)
+def insertion_sort_steps(arr: list): # O(n^2)
     arr = arr.copy()
     n = len(arr)
 
@@ -51,11 +51,11 @@ def insertion_sort_steps(arr): # O(n^2)
 
     yield {}, ()
 
-def merge_sort_steps(arr):
+def merge_sort_steps(arr: list):
     arr = arr.copy()
     n = len(arr)
 
-    def merge(left, mid, right):
+    def merge(left: int, mid: int, right: int):
         left_arr = arr[left:mid + 1]
         right_arr = arr[mid + 1:right + 1]
 
@@ -92,7 +92,7 @@ def merge_sort_steps(arr):
                 yield {k: value}, (k,)
             k += 1
 
-    def divide(left, right):
+    def divide(left: int, right: int):
         if left >= right:
             return
 
@@ -105,13 +105,13 @@ def merge_sort_steps(arr):
     yield from divide(0, n - 1)
     yield {}, ()
 
-def quick_sort_steps(arr):
+def quick_sort_steps(arr: list):
     arr = arr.copy()
     n = len(arr)
 
-    def divide(left, right):
+    def divide(left: int, right: int):
 
-        def median_of_three(left, right):
+        def median_of_three(left: int, right: int):
             mid = (left + right) // 2
 
             a = arr[left]
@@ -152,7 +152,7 @@ def quick_sort_steps(arr):
 
         return i
 
-    def quick_sort(left, right):
+    def quick_sort(left: int, right: int):
         if left < right:
             p = yield from divide(left, right)
 
@@ -253,11 +253,11 @@ def shell_sort_steps(arr: list): # O(n^2)
 
     yield {}, ()
 
-def tim_sort_steps(arr): # O(n^2)
+def tim_sort_steps(arr: list): # O(n^2)
 
     yield {}, ()
 
-def radix_sort_steps(arr): # O(n^2)
+def radix_sort_steps(arr: list): # O(n^2)
 
     yield {}, ()
 
