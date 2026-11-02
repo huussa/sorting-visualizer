@@ -10,6 +10,10 @@ import sort
 
 
 class SortingVisualizer:
+    MAX_STEPS_PER_FRAME = 256
+    MAX_CHANGES_PER_FRAME = 512
+    FRAME_COMPUTE_BUDGET = 0.008
+
     def __init__(self, root):
         self.root = root
         self.root.title("Sorting Visualizer")
@@ -23,6 +27,11 @@ class SortingVisualizer:
         self.after_id = None
         self.timer_after_id = None
         self.timer_started_at = None
+        self.algorithm_time_seconds = 0.0
+        self.pending_changes = []
+        self.pending_change_index = 0
+        self.pending_active = ()
+        self.sort_completed = False
         self.algorithms = {}
         self.bar_items = []
         self.active_indices = set()
@@ -182,10 +191,17 @@ class SortingVisualizer:
         )
         self.status.pack(pady=5)
 
+        self.algorithm_time_label = ttk.Label(
+            root,
+            text="Algorithm CPU (step generation): 00:00.000",
+            font=("TkDefaultFont", 11, "bold")
+        )
+        self.algorithm_time_label.pack(pady=(0, 2))
+
         self.timer = ttk.Label(
             root,
-            text="Time: 00:00.00",
-            font=("TkDefaultFont", 14, "bold")
+            text="Visualization time (animation + delay): 00:00.000",
+            font=("TkDefaultFont", 11, "bold")
         )
         self.timer.pack(pady=(0, 5))
 
@@ -459,6 +475,12 @@ class SortingVisualizer:
                 self.algorithms[name](self.arr.copy())
             )
 
+            self.algorithm_time_seconds = 0.0
+            self.pending_changes = []
+            self.pending_change_index = 0
+            self.pending_active = ()
+            self.sort_completed = False
+            self.update_algorithm_time()
             self.running = True
             self.start_timer()
 
@@ -488,6 +510,19 @@ class SortingVisualizer:
     # =========================
     # Elapsed-time counter
     # =========================
+    @staticmethod
+    def format_elapsed(elapsed):
+        minutes, seconds = divmod(elapsed, 60)
+        return f"{int(minutes):02d}:{seconds:05.3f}"
+
+    def update_algorithm_time(self):
+        self.algorithm_time_label.config(
+            text=(
+                "Algorithm CPU (step generation): "
+                f"{self.format_elapsed(self.algorithm_time_seconds)}"
+            )
+        )
+
     def start_timer(self):
         self.stop_timer()
         self.timer_started_at = time.perf_counter()
@@ -498,9 +533,11 @@ class SortingVisualizer:
             return
 
         elapsed = time.perf_counter() - self.timer_started_at
-        minutes, seconds = divmod(elapsed, 60)
         self.timer.config(
-            text=f"Time: {int(minutes):02d}:{seconds:05.2f}"
+            text=(
+                "Visualization time (animation + delay): "
+                f"{self.format_elapsed(elapsed)}"
+            )
         )
         self.timer_after_id = self.root.after(50, self.update_timer)
 
@@ -508,12 +545,13 @@ class SortingVisualizer:
         if self.timer_after_id is not None:
             self.root.after_cancel(self.timer_after_id)
             self.timer_after_id = None
-
         if self.timer_started_at is not None:
             elapsed = time.perf_counter() - self.timer_started_at
-            minutes, seconds = divmod(elapsed, 60)
             self.timer.config(
-                text=f"Time: {int(minutes):02d}:{seconds:05.2f}"
+                text=(
+                    "Visualization time (animation + delay): "
+                    f"{self.format_elapsed(elapsed)}"
+                )
             )
 
         self.timer_started_at = None
@@ -527,67 +565,100 @@ class SortingVisualizer:
 
         self.after_id = None
 
-        try:
-            changes, active = next(self.steps)
-
-            if not isinstance(changes, dict):
-                raise ValueError(
-                    "The algorithm must yield index-to-value changes."
-                )
-
-            if not isinstance(active, tuple):
-                raise ValueError(
-                    "The algorithm must yield active indices as a tuple."
-                )
-
-            changed_indices = set(changes)
-            all_indices = changed_indices | set(active)
-            if any(
-                not isinstance(index, int)
-                or isinstance(index, bool)
-                or not 0 <= index < len(self.arr)
-                for index in all_indices
-            ):
-                raise ValueError(
-                    "The algorithm yielded an invalid array index."
-                )
-
-            if any(
-                not isinstance(value, (int, float))
-                or isinstance(value, bool)
-                for value in changes.values()
-            ):
-                raise ValueError(
-                    "The algorithm yielded a non-numeric array value."
-                )
-
-            self.update_bars(changes, active)
-
-            delay = int(self.speed.get())
-
+        if self.pending_changes:
+            self.render_pending_changes()
+            if not self.pending_changes and self.sort_completed:
+                self.finish_sort()
+                return
             self.after_id = self.root.after(
-                delay, self.animate
+                int(self.speed.get()), self.animate
             )
+            return
 
-        except StopIteration:
-            self.running = False
-            self.steps = None
-            self.stop_timer()
+        combined_changes = {}
+        active = ()
+        steps_processed = 0
+        frame_started_at = time.perf_counter()
+        completed = False
 
-            self.start_button.config(
-                state="normal"
-            )
-            self.stop_button.config(
-                state="disabled"
-            )
+        try:
+            while (
+                steps_processed < self.MAX_STEPS_PER_FRAME
+                and time.perf_counter() - frame_started_at
+                < self.FRAME_COMPUTE_BUDGET
+            ):
+                step_started_at = time.perf_counter()
+                try:
+                    changes, active = next(self.steps)
+                except StopIteration:
+                    completed = True
+                    break
+                finally:
+                    self.algorithm_time_seconds += (
+                        time.perf_counter() - step_started_at
+                    )
 
-            self.status.config(text="Sorted!")
-            self.draw()
+                if not isinstance(changes, dict):
+                    raise ValueError(
+                        "The algorithm must yield index-to-value changes."
+                    )
+
+                if not isinstance(active, tuple):
+                    raise ValueError(
+                        "The algorithm must yield active indices as a tuple."
+                    )
+
+                changed_indices = set(changes)
+                all_indices = changed_indices | set(active)
+                if any(
+                    not isinstance(index, int)
+                    or isinstance(index, bool)
+                    or not 0 <= index < len(self.arr)
+                    for index in all_indices
+                ):
+                    raise ValueError(
+                        "The algorithm yielded an invalid array index."
+                    )
+
+                if any(
+                    not isinstance(value, (int, float))
+                    or isinstance(value, bool)
+                    for value in changes.values()
+                ):
+                    raise ValueError(
+                        "The algorithm yielded a non-numeric array value."
+                    )
+
+                combined_changes.update(changes)
+                steps_processed += 1
+
+                if not changes and not active:
+                    break
+
+            self.update_algorithm_time()
+            if steps_processed:
+                if combined_changes:
+                    self.pending_changes = list(combined_changes.items())
+                    self.pending_change_index = 0
+                    self.pending_active = active
+                    self.render_pending_changes()
+                else:
+                    self.update_bars({}, active)
+
+            if completed and not self.pending_changes:
+                self.finish_sort()
+            else:
+                self.sort_completed = completed
+                delay = int(self.speed.get())
+                self.after_id = self.root.after(delay, self.animate)
 
         except Exception as error:
             self.running = False
             self.steps = None
-            self.after_id = None
+            self.pending_changes = []
+            self.pending_change_index = 0
+            self.pending_active = ()
+            self.sort_completed = False
             self.stop_timer()
 
             self.start_button.config(
@@ -597,9 +668,40 @@ class SortingVisualizer:
                 state="disabled"
             )
 
+            self.after_id = None
+
             messagebox.showerror(
                 "Animation Error", str(error)
             )
+
+    def render_pending_changes(self):
+        end = min(
+            self.pending_change_index + self.MAX_CHANGES_PER_FRAME,
+            len(self.pending_changes)
+        )
+        changes = dict(
+            self.pending_changes[self.pending_change_index:end]
+        )
+        self.update_bars(changes, self.pending_active)
+        self.pending_change_index = end
+
+        if end == len(self.pending_changes):
+            self.pending_changes = []
+            self.pending_change_index = 0
+            self.pending_active = ()
+
+    def finish_sort(self):
+        self.running = False
+        self.steps = None
+        self.pending_changes = []
+        self.pending_change_index = 0
+        self.pending_active = ()
+        self.sort_completed = False
+        self.stop_timer()
+        self.start_button.config(state="normal")
+        self.stop_button.config(state="disabled")
+        self.status.config(text="Sorted!")
+        self.draw()
 
     # =========================
     # Stop sorting
@@ -616,6 +718,12 @@ class SortingVisualizer:
             self.after_id = None
 
         self.steps = None
+        for index, value in self.pending_changes[self.pending_change_index:]:
+            self.arr[index] = value
+        self.pending_changes = []
+        self.pending_change_index = 0
+        self.pending_active = ()
+        self.sort_completed = False
 
         self.start_button.config(
             state="normal"

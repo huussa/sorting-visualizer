@@ -394,7 +394,7 @@ def tim_sort_steps(arr: list): # O(n log n)
 
     yield {}, ()
 
-def radix_sort_steps(arr): # O(d * (n + 256))
+def radix_sort_steps(arr: list): # O(d * (n + 256))
     if any(not isinstance(value, int) or isinstance(value, bool) for value in arr):
         raise ValueError("Radix sort requires integer values.")
 
@@ -406,6 +406,7 @@ def radix_sort_steps(arr): # O(d * (n + 256))
     minimum = min(arr)
     maximum_offset = max(arr) - minimum
     shift = 0
+    batch_size = 32
 
     while (maximum_offset >> shift) > 0:
         counts = [0] * 256
@@ -425,15 +426,22 @@ def radix_sort_steps(arr): # O(d * (n + 256))
             counts[digit] -= 1
             output[counts[digit]] = value
 
-        changes = {}
-        for index, value in enumerate(output):
-            if arr[index] != value:
-                changes[index] = value
-        arr = output
+        for start in range(0, len(arr), batch_size):
+            changes = {}
+            end = min(start + batch_size, len(arr))
+            for index in range(start, end):
+                value = output[index]
+                if arr[index] != value:
+                    changes[index] = value
+                    arr[index] = value
 
-        if changes:
-            yield changes, tuple(changes)
+            if changes:
+                yield changes, tuple(changes)
+
         shift += 8
+        if (maximum_offset >> shift) > 0:
+            yield {}, ()
+
     yield {}, ()
 
 
